@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Implications | JPX OIS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Market Implications</h1>
+            <div class="subtitle">JPX OIS Settlement Rates & Market Expectations</div>
+            {% if data %}
+            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--accent-color);">
+                Latest Data: {{ data.latest_date }}
+            </div>
+            {% endif %}
+        </header>
+
+        {% if not data %}
+        <div class="card">
+            <div class="loading">No data available. Please run the ingestion script.</div>
+        </div>
+        {% else %}
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('curve')">Yield Curve</button>
+            <button class="tab-btn" onclick="switchTab('table')">Data Table</button>
+        </div>
+
+        <div id="view-curve" class="view-section">
+            <div class="card">
+                <div class="chart-container">
+                    <canvas id="oisChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-table" class="view-section" style="display: none;">
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tenor</th>
+                            <th>Rate (%)</th>
+                            <th>Years (Approx)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data.curve %}
+                        <tr>
+                            <td>{{ row.tenor }}</td>
+                            <td>{{ row.rate }}</td>
+                            <td>{{ "%.2f"|format(row.years) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% endif %}
+
+        <div class="footer">
+            Data Source: JPX JSCC Settlement Rates
+        </div>
+    </div>
+
+    <script>
+        {% if data %}
+        const rawData = {{ data.curve | tojson }};
+        
+        // Prepare Chart Data
+        const labels = rawData.map(d => d.tenor);
+        const rates = rawData.map(d => d.rate);
+
+        const ctx = document.getElementById('oisChart').getContext('2d');
+        
+        // Gradient
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(56, 189, 248, 0.5)');
+        gradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'OIS Rate (%)',
+                    data: rates,
+                    borderColor: '#38bdf8',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#0f172a',
+                    pointBorderColor: '#38bdf8',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                        titleColor: '#f8fafc',
+                        bodyColor: '#94a3b8',
+                        borderColor: 'rgba(148, 163, 184, 0.1)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+
+        function switchTab(tabName) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update views
+            document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+            document.getElementById('view-' + tabName).style.display = 'block';
+        }
+        {% endif %}
+    </script>
+</body>
+</html>
