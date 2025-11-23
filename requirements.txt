@@ -1,6 +1,0 @@
-flask
-pdfplumber
-pandas
-requests
-beautifulsoup4
-openpyxl
