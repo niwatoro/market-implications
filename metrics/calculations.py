@@ -59,12 +59,12 @@ def calculate_rate_probabilities(data_json: dict[str, Any]) -> dict[str, Any] | 
     days_to_meeting = (next_meeting - source_date).days
 
     # Calculate implied rate
-    def calculate_implied_rate(df: pd.DataFrame, days_pre: int, r0: float) -> float:
+    def calculate_implied_rate(df: pd.DataFrame, days_pre: int, r_pre: float) -> float:
         row_post = df[df["days"] >= days_to_meeting].iloc[0]
         r_post = row_post["rate"]
         days_post = row_post["days"] - days_pre
 
-        return float((r_post * (days_pre + days_post) - r0 * days_pre) / days_post)
+        return float((r_post * (days_pre + days_post) - r_pre * days_pre) / days_post)
 
     implied_rate = calculate_implied_rate(df, days_to_meeting, current_rate)
 

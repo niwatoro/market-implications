@@ -2,30 +2,6 @@
 
 A comprehensive dashboard for visualizing market-implied metrics, focusing on the Japanese market. This application provides insights into Bank of Japan (BoJ) rate probabilities, corporate default risks, and other key financial indicators, all presented in a premium, Bloomberg-inspired user interface.
 
-## Features
-
-- **BoJ Rate Probabilities**:
-  - Visualizes the probability of Bank of Japan rate hikes or cuts.
-  - Calculates implied rates based on market data (OIS rates).
-  - Displays probabilities for "No Change", "Hike (+25bps)", and "Cut (-25bps)".
-
-- **Corporation Default Probabilities**:
-  - Calculates and displays default probabilities (PD) for major Japanese corporations.
-  - Utilizes JSDA bond market data to estimate credit spreads and hazard rates.
-  - Ranks issuers by risk (5-year PD).
-
-- **Bloomberg-like UI**:
-  - A dark-themed, data-centric user interface designed for financial professionals.
-  - Features high-contrast colors (amber, green, red) for clear data visualization.
-  - Responsive and dynamic layout.
-
-## Tech Stack
-
-- **Backend**: Python, Flask
-- **Frontend**: Jinja2 Templates, HTML5, CSS3, Chart.js
-- **Data Processing**: Pandas, NumPy
-- **Dependency Management**: uv
-
 ## Installation
 
 This project uses `uv` for dependency management.
@@ -70,3 +46,39 @@ The application relies on market data stored in `data/market_data.json`. This da
 - **`templates/`**: HTML templates for the frontend.
 - **`static/`**: Static assets (CSS, JavaScript, images).
 - **`.github/`**: CI/CD workflows for automated data updates.
+
+## Theory
+
+### Rate Hike/Cut Probability
+
+Assume that the next monetary policy decision is scheduled in $D_\text{pre}$. Let $r_\text{post}$ denote the OIS rate with maturity $D_\text{pre}+D_\text{post}$ days. The current one-day rate is denoted by $r_\text{pre}$ and the one-day rate that will prevail after the policy decision is represented by the random variable $r$.
+
+Here, $r_\text{post}$, interpreted as the average rate over the entire period $[0,D_\text{pre}+D_\text{post}]$, can be written as:
+
+$$r_\text{post}={r_\text{pre}D_\text{pre}+\mathbb E[r]D_\text{post}\over D_\text{pre}+D_\text{post}}.$$
+
+Solving this expression for $\mathbb E[r]$ yields:
+
+$$\mathbb E[r]={r_\text{post}(D_\text{pre}+D_\text{post})-r_\text{pre}D_\text{pre}\over D_\text{post}}.$$
+
+Suppose further that a central bank hikes/cuts the policy rate by $\Delta$, so that the post-decision rate is $r_\text{pre}+\Delta$. Thus, the probability $p$ of a rate hike/cut is given by:
+
+$$p={\mathbb E[r]-r_\text{pre}\over\Delta}.$$
+
+### Probability of Default
+
+Consider a corporate bond with yield $y_\text{corp}$. Let $y_\text{gov}$ denote the yield of a government bond with the same maturity. The spread $s$ is given by:
+
+$$s=y_\text{corp}-y_\text{gov}.$$
+
+Let $R$ be the recovery rate, which is set uniformly to 10% from [historical data](https://www.bloomberg.co.jp/news/articles/2023-11-14/S43427T0AFB401).
+
+The harzard rate $\lambda$ can then be written as:
+
+$$\lambda={s\over 1-R}.$$
+
+Assuming a constant hazard rate, the probability of default $PD$ over a time horizon $T$ is given by:
+
+$$PD(T) = 1-\exp(-\lambda T).$$
+
+In practice, even for the same issuer, yields--and hence hazard rates--can differ across maturities. For simplicity, however, the hazard rate for each issuer is approximated by its average maturities.
