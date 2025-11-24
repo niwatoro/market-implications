@@ -7,7 +7,7 @@ from typing import Any
 
 import pdfplumber
 import requests
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup
 
 DATA_DIR = "data"
 OUTPUT_FILE = os.path.join(DATA_DIR, "market_data.json")
@@ -26,44 +26,9 @@ def get_pdf_url() -> str:
     resp.raise_for_status()
     soup = BeautifulSoup(resp.content, "html.parser")
 
-    # XPath logic: //*[@id="main_body"]/div[3]/table/tbody/tr/td[2]/a
-    main_body = soup.find(id="main_body")
-    if not main_body:
-        raise Exception("Could not find id='main_body'")
-
-    divs = [d for d in main_body.find_all("div", recursive=False)]
-    if len(divs) < 3:
-        # Fallback: try to find the table directly
-        print("Div structure changed, trying to find table directly...")
-        tables = main_body.find_all("table")
-        for tbl in tables:
-            rows = tbl.find_all("tr")
-            if rows:
-                cols = rows[0].find_all("td")
-                if len(cols) >= 2:
-                    link = cols[1].find("a")
-                    href = link.get("href", "") if link else ""
-                    if link and isinstance(href, str) and href.endswith(".pdf"):
-                        return urllib.parse.urljoin(url, href)
-        raise Exception("Could not find PDF link in any table")
-
-    target_div = divs[2]
-    table: Tag | None = target_div.find("table")
-    if not table:
-        raise Exception("No table in target div")
-
-    rows = table.find_all("tr")
-    if not rows:
-        raise Exception("No rows in table")
-
-    first_row = rows[0]
-    cols = first_row.find_all("td")
-    if len(cols) < 2:
-        raise Exception("Not enough columns in first row")
-
-    link = cols[1].find("a")
+    link = soup.select_one("a[href$='pdf']")
     if not link:
-        raise Exception("No link in 2nd td")
+        raise Exception("Could not find PDF link")
 
     href = link.get("href")
     return urllib.parse.urljoin(url, str(href) if href else "")
