@@ -24,7 +24,7 @@ jobs:
           pip install requests beautifulsoup4 pandas pdfplumber openpyxl
 
       - name: Run ingestion script
-        run: python data/ingest.py
+        run: PYTHONPATH="$PYTHONPATH:$(pwd)" python data/ingest.py
 
       - name: Commit and push changes
         run: |
