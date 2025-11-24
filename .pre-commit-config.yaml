@@ -14,4 +14,12 @@ repos:
   hooks:
     - id: mypy
       args: ["--strict"]
+      additional_dependencies:
+        - numpy
+        - pandas-stubs
+        - types-requests
+        - types-beautifulsoup4
+        - flask
+        - pdfplumber
+        - beautifulsoup4
       

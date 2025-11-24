@@ -67,22 +67,36 @@ def calculate_default_probabilities(csv_path: str) -> list[dict[str, Any]]:
         print("CSV format unexpected: too few columns")
         return []
 
-    df.columns = [
-        "trade_date",
-        "category",
-        "issue_code",
-        "name",
-        "maturity",
-        "coupon",
-        "yield",
-    ] + [f"c{i}" for i in range(7, df.shape[1])]
+    df.columns = pd.Index(
+        [
+            "trade_date",
+            "category",
+            "issue_code",
+            "name",
+            "maturity",
+            "coupon",
+            "yield",
+        ]
+        + [f"c{i}" for i in range(7, df.shape[1])]
+    )
 
     # Preprocessing
     df["trade_date_dt"] = df["trade_date"].apply(parse_ymd_int)
     df["maturity_dt"] = df["maturity"].apply(parse_ymd_int)
 
     # Years to maturity
-    df["years_to_maturity"] = (df["maturity_dt"] - df["trade_date_dt"]).dt.days / 365.0
+    # Years to maturity
+    # Ensure datetime type for subtraction
+    maturity_series = pd.to_datetime(df["maturity_dt"])
+    trade_date_series = pd.to_datetime(df["trade_date_dt"])
+
+    # Calculate difference and extract days
+    # pd.to_datetime ensures it's datetime
+    diff_series = maturity_series - trade_date_series
+
+    # Access .dt.days.
+    # Using apply to be safe and avoid .dt accessor issues with stubs
+    df["years_to_maturity"] = diff_series.dt.days / 365.0
 
     # Clean yield
     df["yield"] = pd.to_numeric(df["yield"], errors="coerce")
@@ -107,8 +121,8 @@ def calculate_default_probabilities(csv_path: str) -> list[dict[str, Any]]:
         gov.groupby("T_bucket")["yield"].mean().reset_index().sort_values("T_bucket")
     )
 
-    T_points = gov_curve["T_bucket"].values
-    y_points = gov_curve["yield"].values
+    T_points = np.asarray(gov_curve["T_bucket"].values, dtype=float)
+    y_points = np.asarray(gov_curve["yield"].values, dtype=float)
 
     if len(T_points) < 2:
         print("Not enough points for RF curve.")
@@ -134,7 +148,9 @@ def calculate_default_probabilities(csv_path: str) -> list[dict[str, Any]]:
     corp["issuer"] = corp["name"].apply(extract_issuer)
 
     # Interpolate RF yield
-    corp["rf_yield"] = np.interp(corp["years_to_maturity"].values, T_points, y_points)
+    corp["rf_yield"] = np.interp(
+        np.asarray(corp["years_to_maturity"].values, dtype=float), T_points, y_points
+    )
 
     # Calculate Spread
     corp["spread_pct"] = corp["yield"] - corp["rf_yield"]

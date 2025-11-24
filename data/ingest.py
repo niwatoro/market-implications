@@ -181,7 +181,7 @@ def download_jsda_csv() -> str | None:
         # The link text usually contains dates like "2025.11.25"
         csv_links = []
         for a in soup.find_all("a", href=True):
-            href = a["href"]
+            href = str(a["href"])
             if href.lower().endswith(".csv") and "files" in href:
                 csv_links.append(href)
 
@@ -197,7 +197,7 @@ def download_jsda_csv() -> str | None:
 
         # Handle relative paths
         # href might be "./files/..." or "files/..."
-        latest_csv_url = urllib.parse.urljoin(index_url, latest_csv_rel)
+        latest_csv_url = urllib.parse.urljoin(index_url, str(latest_csv_rel))
 
         filename = os.path.basename(latest_csv_url)
         save_path = os.path.join(DATA_DIR, filename)

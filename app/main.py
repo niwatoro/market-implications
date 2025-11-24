@@ -20,7 +20,8 @@ def load_data() -> dict[str, Any] | None:
     if not os.path.exists(DATA_FILE):
         return None
     with open(DATA_FILE) as f:
-        return json.load(f)
+        data: dict[str, Any] = json.load(f)
+        return data
 
 
 @app.route("/")

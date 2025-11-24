@@ -2,6 +2,7 @@ import urllib.parse
 
 import requests
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
 
 def find_pdf_with_xpath_logic() -> None:
@@ -16,8 +17,8 @@ def find_pdf_with_xpath_logic() -> None:
     # Note: div[3] in XPath is 1-indexed, so it's the 3rd div.
 
     main_body = soup.find(id="main_body")
-    if not main_body:
-        print("Could not find id='main_body'")
+    if not main_body or not isinstance(main_body, Tag):
+        print("Could not find id='main_body' or it is not a Tag")
         return
 
     # Find direct div children
