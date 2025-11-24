@@ -51,7 +51,7 @@ The application relies on market data stored in `data/market_data.json`. This da
 
 ### Rate Hike/Cut Probability
 
-Assume that the next monetary policy decision is scheduled in $D_\text{pre}$. Let $r_\text{post}$ denote the OIS rate with maturity $D_\text{pre}+D_\text{post}$ days. The current one-day rate is denoted by $r_\text{pre}$ and the one-day rate that will prevail after the policy decision is represented by the random variable $r$.
+Assume that the next monetary policy decision is scheduled in $D_\text{pre}$ days. Let $r_\text{post}$ denote the OIS rate with maturity $D_\text{pre}+D_\text{post}$ days. The current one-day rate is denoted by $r_\text{pre}$ and the one-day rate that will prevail after the policy decision is represented by the random variable $r$.
 
 Here, $r_\text{post}$, interpreted as the average rate over the entire period $[0,D_\text{pre}+D_\text{post}]$, can be written as:
 
