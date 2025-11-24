@@ -1,12 +1,13 @@
-import requests
-import pdfplumber
-import os
 import json
-import urllib.parse
-from bs4 import BeautifulSoup, Tag
-from datetime import datetime
+import os
 import re
-from typing import List, Optional, Tuple, Any, Dict
+import urllib.parse
+from datetime import datetime
+from typing import Any
+
+import pdfplumber
+import requests
+from bs4 import BeautifulSoup, Tag
 
 DATA_DIR = "data"
 OUTPUT_FILE = os.path.join(DATA_DIR, "market_data.json")
@@ -14,6 +15,11 @@ PDF_PATH = os.path.join(DATA_DIR, "latest_rates.pdf")
 
 
 def get_pdf_url() -> str:
+    """
+    Retrieve the JPX PDF URL.
+
+    Returns the URL string pointing to the latest rates PDF.
+    """
     url = "https://www.jpx.co.jp/jscc/toukei_irs.html"
     print(f"Fetching {url}...")
     resp = requests.get(url)
@@ -42,7 +48,7 @@ def get_pdf_url() -> str:
         raise Exception("Could not find PDF link in any table")
 
     target_div = divs[2]
-    table: Optional[Tag] = target_div.find("table")
+    table: Tag | None = target_div.find("table")
     if not table:
         raise Exception("No table in target div")
 
@@ -64,6 +70,7 @@ def get_pdf_url() -> str:
 
 
 def download_pdf(url: str) -> str:
+    """Download the PDF file."""
     print(f"Downloading PDF from {url}...")
     resp = requests.get(url)
     resp.raise_for_status()
@@ -72,7 +79,7 @@ def download_pdf(url: str) -> str:
     return PDF_PATH
 
 
-def fetch_boj_meeting_dates() -> List[str]:
+def fetch_boj_meeting_dates() -> list[str]:
     """
     Fetch upcoming BoJ monetary policy meeting dates from the official website.
     Returns a list of meeting dates in ISO format (YYYY-MM-DD).
@@ -129,7 +136,8 @@ def fetch_boj_meeting_dates() -> List[str]:
         return []
 
 
-def parse_pdf(pdf_path: str) -> Tuple[Optional[str], List[Dict[str, Any]]]:
+def parse_pdf(pdf_path: str) -> tuple[str | None, list[dict[str, Any]]]:
+    """Parse the PDF file."""
     print("Parsing PDF...")
     data = []
     extracted_date = None
@@ -185,6 +193,7 @@ def parse_pdf(pdf_path: str) -> Tuple[Optional[str], List[Dict[str, Any]]]:
 
 
 def main() -> None:
+    """Ingest the latest rates PDF."""
     try:
         url = get_pdf_url()
         print(f"Found PDF URL: {url}")

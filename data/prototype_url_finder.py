@@ -1,9 +1,11 @@
+import urllib.parse
+
 import requests
 from bs4 import BeautifulSoup
-import urllib.parse
 
 
 def find_pdf_with_xpath_logic() -> None:
+    """Find the PDF URL using XPath logic."""
     url = "https://www.jpx.co.jp/jscc/toukei_irs.html"
     print(f"Fetching {url}...")
     resp = requests.get(url)
@@ -19,13 +21,10 @@ def find_pdf_with_xpath_logic() -> None:
         return
 
     # Find direct div children
-    # BeautifulSoup's find_all(recursive=False) might be useful, or just iterating children
     divs = [d for d in main_body.find_all("div", recursive=False)]
 
     if len(divs) < 3:
         print(f"Found only {len(divs)} divs under main_body")
-        # Fallback: maybe the user meant nested divs or just the 3rd div appearing in main_body
-        # Let's try to find the table directly if the div structure is loose
     else:
         target_div = divs[2]  # 0-indexed index 2 is 3rd element
         print("Found target div")

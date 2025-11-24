@@ -1,13 +1,11 @@
-import pandas as pd
 from datetime import datetime
-import numpy as np
-from typing import Any, Dict, Optional
+from typing import Any
+
+import pandas as pd
 
 
-def calculate_rate_probabilities(data_json: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """
-    Calculate BoJ rate hike/cut probabilities based on market-implied rates.
-    """
+def calculate_rate_probabilities(data_json: dict[str, Any]) -> dict[str, Any] | None:
+    """Calculate BoJ rate hike/cut probabilities based on market-implied rates."""
     if not data_json or "rates" not in data_json or "boj_meetings" not in data_json:
         return None
 
@@ -106,10 +104,8 @@ def calculate_rate_probabilities(data_json: Dict[str, Any]) -> Optional[Dict[str
     }
 
 
-def process_market_data(data_json: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """
-    Process raw market data JSON into a structured format for the dashboard.
-    """
+def process_market_data(data_json: dict[str, Any]) -> dict[str, Any] | None:
+    """Process raw market data JSON into a structured format for the dashboard."""
     if not data_json or "rates" not in data_json:
         return None
 
@@ -131,14 +127,6 @@ def process_market_data(data_json: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     df["years"] = df["tenor"].apply(tenor_to_years)
     df = df.sort_values("years")
-
-    # Calculate simple forward rates (bootstrapping is complex, using simple implied fwd for visualization)
-    # Forward rate between t1 and t2:
-    # (1 + r2*t2) = (1 + r1*t1) * (1 + f * (t2-t1))
-    # f = [ (1 + r2*t2) / (1 + r1*t1) - 1 ] / (t2 - t1)
-
-    # We'll calculate 3M forward rates starting from each tenor
-    # This is a simplification.
 
     # Calculate rate probabilities
     rate_probabilities = calculate_rate_probabilities(data_json)

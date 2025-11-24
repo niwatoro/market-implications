@@ -1,6 +1,7 @@
-import requests
-import pdfplumber
 import os
+
+import pdfplumber
+import requests
 
 DATA_DIR = "data"
 PDF_PATH = os.path.join(DATA_DIR, "settlement_rates.pdf")
@@ -8,6 +9,7 @@ URL = "https://www.jpx.co.jp/jscc/cimhll0000000umu-att/SettlementRates_20251121.
 
 
 def inspect_pdf() -> None:
+    """Inspect the PDF file."""
     print(f"Downloading {URL}...")
     resp = requests.get(URL)
     resp.raise_for_status()

@@ -1,5 +1,6 @@
-import pandas as pd
 import os
+
+import pandas as pd
 
 DATA_DIR = "data"
 TEMP_PATH = os.path.join(DATA_DIR, "sample.xlsx")
