@@ -212,6 +212,23 @@ h1 {
     background: var(--hover-bg);
 }
 
+/* Sort indicators */
+.data-table th {
+    user-select: none;
+}
+
+.data-table th:hover {
+    background: var(--hover-bg);
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: 0.25rem;
+    color: var(--bloomberg-orange);
+    font-size: 0.7rem;
+    min-width: 0.75rem;
+}
+
 /* Numeric data styling */
 .data-table td:nth-child(2),
 .data-table td:nth-child(3),

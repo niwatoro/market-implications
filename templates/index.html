@@ -93,26 +93,33 @@
                     <div class="card-header">CORPORATE DEFAULT PROBABILITIES (IMPLIED)</div>
                     {% if data and data.credit_data %}
                     <div style="overflow-x: auto;">
-                        <table class="data-table">
+                        <table class="data-table" id="creditTable">
                             <thead>
                                 <tr>
-                                    <th>ISSUER</th>
-                                    <th>BONDS</th>
-                                    <th>AVG SPREAD (bps)</th>
-                                    <th>PD 1Y (%)</th>
-                                    <th>PD 3Y (%)</th>
-                                    <th>PD 5Y (%)</th>
+                                    <th onclick="sortTable(0, 'string')" style="cursor: pointer;">ISSUER <span
+                                            class="sort-indicator"></span></th>
+                                    <th onclick="sortTable(1, 'number')" style="cursor: pointer;">BONDS <span
+                                            class="sort-indicator"></span></th>
+                                    <th onclick="sortTable(2, 'number')" style="cursor: pointer;">AVG SPREAD (bps) <span
+                                            class="sort-indicator"></span></th>
+                                    <th onclick="sortTable(3, 'number')" style="cursor: pointer;">PD 1Y (%) <span
+                                            class="sort-indicator"></span></th>
+                                    <th onclick="sortTable(4, 'number')" style="cursor: pointer;">PD 3Y (%) <span
+                                            class="sort-indicator"></span></th>
+                                    <th onclick="sortTable(5, 'number')" style="cursor: pointer;">PD 5Y (%) <span
+                                            class="sort-indicator"></span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in data.credit_data %}
                                 <tr>
                                     <td style="color: #FF7F00; font-weight: bold;">{{ row.issuer }}</td>
-                                    <td>{{ row.n_bonds }}</td>
-                                    <td>{{ "{:.2f}".format(row.avg_spread_bps) }}</td>
-                                    <td>{{ "{:.2f}".format(row.pd_1y) }}</td>
-                                    <td>{{ "{:.2f}".format(row.pd_3y) }}</td>
-                                    <td>{{ "{:.2f}".format(row.pd_5y) }}</td>
+                                    <td data-value="{{ row.n_bonds }}">{{ row.n_bonds }}</td>
+                                    <td data-value="{{ row.avg_spread_bps }}">{{ "{:.2f}".format(row.avg_spread_bps) }}
+                                    </td>
+                                    <td data-value="{{ row.pd_1y }}">{{ "{:.2f}".format(row.pd_1y) }}</td>
+                                    <td data-value="{{ row.pd_3y }}">{{ "{:.2f}".format(row.pd_3y) }}</td>
+                                    <td data-value="{{ row.pd_5y }}">{{ "{:.2f}".format(row.pd_5y) }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -423,6 +430,54 @@
             }
         });
         {% endif %}
+
+        function sortTable(columnIndex, dataType) {
+            const table = document.getElementById('creditTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const headers = table.querySelectorAll('th');
+
+            // Get current sort direction for this column
+            const currentHeader = headers[columnIndex];
+            const currentIndicator = currentHeader.querySelector('.sort-indicator');
+            const isAscending = currentIndicator.textContent === '▲';
+
+            // Clear all sort indicators
+            headers.forEach(header => {
+                header.querySelector('.sort-indicator').textContent = '';
+            });
+
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue, bValue;
+
+                if (dataType === 'number') {
+                    // Use data-value attribute for numeric columns
+                    aValue = parseFloat(a.cells[columnIndex].getAttribute('data-value')) || 0;
+                    bValue = parseFloat(b.cells[columnIndex].getAttribute('data-value')) || 0;
+                } else {
+                    // Use text content for string columns
+                    aValue = a.cells[columnIndex].textContent.trim();
+                    bValue = b.cells[columnIndex].textContent.trim();
+                }
+
+                if (dataType === 'number') {
+                    return isAscending ? (bValue - aValue) : (aValue - bValue);
+                } else {
+                    if (isAscending) {
+                        return bValue.localeCompare(aValue, 'ja-JP', { sensitivity: 'accent' });
+                    } else {
+                        return aValue.localeCompare(bValue, 'ja-JP', { sensitivity: 'accent' });
+                    }
+                }
+            });
+
+            // Update sort indicator
+            currentIndicator.textContent = isAscending ? '▼' : '▲';
+
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
 
         function switchTab(tabName) {
             // Update buttons
