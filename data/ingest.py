@@ -9,7 +9,7 @@ import pdfplumber
 import requests
 from bs4 import BeautifulSoup
 
-from metrics import calculate_default_probabilities
+from metrics import calculate_default_probabilities, extract_jgb_curve
 
 DATA_DIR = "data"
 OUTPUT_FILE = os.path.join(DATA_DIR, "market_data.json")
@@ -234,13 +234,22 @@ def main() -> None:
         # Fetch BoJ meeting dates
         boj_meetings = fetch_boj_meeting_dates()
 
+        # Extract OIS tenors for JGB interpolation alignment
+        ois_tenors = [r["tenor"] for r in rates] if rates else []
+
         # 2. JSDA Credit Data
         csv_path = download_jsda_csv()
         credit_data = []
+        jgb_curve = []
         if csv_path:
             print("Calculating default probabilities...")
             credit_data = calculate_default_probabilities(csv_path)
             print(f"Calculated PDs for {len(credit_data)} issuers.")
+
+            print("Extracting JGB yield curve...")
+            # Pass OIS tenors to ensure alignment
+            jgb_curve = extract_jgb_curve(csv_path, target_tenors=ois_tenors)
+            print(f"Extracted {len(jgb_curve)} JGB curve points.")
 
         output = {
             "updated_at": datetime.now().isoformat(),
@@ -249,6 +258,7 @@ def main() -> None:
             "rates": rates,
             "boj_meetings": boj_meetings,
             "credit_data": credit_data,
+            "jgb_curve": jgb_curve,
         }
 
         with open(OUTPUT_FILE, "w") as f:

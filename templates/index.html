@@ -81,7 +81,7 @@
 
             <section id="view-curve" class="view-section" style="display: none;">
                 <div class="card">
-                    <div class="card-header">JPX OIS SETTLEMENT RATES</div>
+                    <div class="card-header">JPX OIS & JGB YIELD CURVES</div>
                     <div class="chart-container">
                         <canvas id="oisChart"></canvas>
                     </div>
@@ -135,46 +135,89 @@
     <script>
         {% if data %}
         const rawData = {{ data.curve | tojson }};
+        const jgbData = {{ data.jgb_curve | tojson }};
 
-        // Prepare Chart Data
+        // Prepare Chart Data for OIS
         const labels = rawData.map(d => d.tenor);
         const rates = rawData.map(d => d.rate);
 
+        // Prepare JGB data
+        const jgbLabels = jgbData.map(d => d.tenor);
+        const jgbRates = jgbData.map(d => d.rate);
+
         const ctx = document.getElementById('oisChart').getContext('2d');
 
-        // Bloomberg-style gradient
+        // Bloomberg-style gradient for OIS
         const gradient = ctx.createLinearGradient(0, 0, 0, 450);
         gradient.addColorStop(0, 'rgba(255, 127, 0, 0.3)');
         gradient.addColorStop(1, 'rgba(255, 127, 0, 0.0)');
+
+        // Build datasets array
+        const datasets = [
+            {
+                label: 'OIS Rate (%)',
+                data: rates,
+                borderColor: '#FF7F00',
+                backgroundColor: gradient,
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.1,
+                pointBackgroundColor: '#000000',
+                pointBorderColor: '#FF7F00',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: '#FF7F00',
+                pointHoverBorderColor: '#FFFFFF',
+                pointHoverBorderWidth: 2
+            }
+        ];
+
+        // Add JGB dataset if data exists
+        if (jgbData && jgbData.length > 0) {
+            datasets.push({
+                label: 'JGB Yield (%)',
+                data: jgbRates,
+                borderColor: '#4A90E2',
+                backgroundColor: 'transparent',
+                borderWidth: 2.5,
+                borderDash: [5, 5],
+                fill: false,
+                tension: 0.1,
+                pointBackgroundColor: '#000000',
+                pointBorderColor: '#4A90E2',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: '#4A90E2',
+                pointHoverBorderColor: '#FFFFFF',
+                pointHoverBorderWidth: 2
+            });
+        }
 
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: 'OIS Rate (%)',
-                    data: rates,
-                    borderColor: '#FF7F00',
-                    backgroundColor: gradient,
-                    borderWidth: 2.5,
-                    fill: true,
-                    tension: 0.1,
-                    pointBackgroundColor: '#000000',
-                    pointBorderColor: '#FF7F00',
-                    pointBorderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointHoverBackgroundColor: '#FF7F00',
-                    pointHoverBorderColor: '#FFFFFF',
-                    pointHoverBorderWidth: 2
-                }]
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#CCCCCC',
+                            font: {
+                                size: 11,
+                                family: 'Arial',
+                                weight: 'bold'
+                            },
+                            padding: 15,
+                            usePointStyle: true
+                        }
                     },
                     tooltip: {
                         mode: 'index',
@@ -185,13 +228,13 @@
                         borderColor: '#FF7F00',
                         borderWidth: 2,
                         padding: 12,
-                        displayColors: false,
+                        displayColors: true,
                         callbacks: {
                             title: function (context) {
                                 return 'TENOR: ' + context[0].label;
                             },
                             label: function (context) {
-                                return 'RATE: ' + context.parsed.y.toFixed(3) + '%';
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(3) + '%';
                             }
                         },
                         titleFont: {

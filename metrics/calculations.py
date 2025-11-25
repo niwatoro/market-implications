@@ -133,6 +133,7 @@ def process_market_data(data_json: dict[str, Any]) -> dict[str, Any] | None:
 
     return {
         "curve": df.to_dict(orient="records"),
+        "jgb_curve": data_json.get("jgb_curve", []),
         "latest_date": data_json.get("source_date"),
         "updated_at": data_json.get("updated_at"),
         "rate_probabilities": rate_probabilities,
