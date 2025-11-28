@@ -1,7 +1,19 @@
 from datetime import datetime
 from typing import Any
 
+import holidays
 import pandas as pd
+
+
+def calculate_next_business_day(date: datetime) -> datetime:
+    """Calculate the next business day in Japan given a date."""
+    jp_holidays = holidays.country_holidays("JP")
+    next_day = date + pd.Timedelta(days=1)
+
+    while next_day.weekday() >= 5 or next_day in jp_holidays:
+        next_day += pd.Timedelta(days=1)
+    print(date, next_day)
+    return next_day
 
 
 def calculate_rate_probabilities(data_json: dict[str, Any]) -> dict[str, Any] | None:
@@ -55,18 +67,21 @@ def calculate_rate_probabilities(data_json: dict[str, Any]) -> dict[str, Any] | 
     next_meeting_str = data_json["boj_meetings"][0]
     next_meeting = datetime.strptime(next_meeting_str, "%Y-%m-%d")
 
-    # Calculate days until meeting
+    # Calculate days until next meeting
     days_to_meeting = (next_meeting - source_date).days
+
+    # Calculate days until the day when the new rate takes effect
+    days_to_effective = (calculate_next_business_day(next_meeting) - source_date).days
 
     # Calculate implied rate
     def calculate_implied_rate(df: pd.DataFrame, days_pre: int, r_pre: float) -> float:
-        row_post = df[df["days"] >= days_to_meeting].iloc[0]
+        row_post = df[df["days"] > days_pre].iloc[0]
         r_post = row_post["rate"]
         days_post = row_post["days"] - days_pre
 
         return float((r_post * (days_pre + days_post) - r_pre * days_pre) / days_post)
 
-    implied_rate = calculate_implied_rate(df, days_to_meeting, current_rate)
+    implied_rate = calculate_implied_rate(df, days_to_effective - 1, current_rate)
 
     probability_of_hike = (implied_rate - current_rate) / 0.25  # 25bps = 0.25%
 
